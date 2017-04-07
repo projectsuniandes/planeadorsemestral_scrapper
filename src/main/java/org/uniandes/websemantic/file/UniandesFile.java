@@ -8,8 +8,6 @@ import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.uniandes.websemantic.object.Artist;
-import org.uniandes.websemantic.object.Artwork;
 import org.uniandes.websemantic.object.Course;
 
 public class UniandesFile {
@@ -52,7 +50,7 @@ public class UniandesFile {
 
 		try {
 			//initialize FileWriter object
-			fileWriter = new FileWriter("artist"+pageName+".csv");
+			fileWriter = new FileWriter("courses"+pageName+".csv");
 
 			//initialize CSVPrinter object 
 			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
