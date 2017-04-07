@@ -7,14 +7,14 @@ public class Course {
 
 	private String code, name;
 
-	private Set<Course> prerequisites;
+	private Set<String> prerequisites;
 
 	public Course() {
 		super();
-		prerequisites = new HashSet<Course>();
+		prerequisites = new HashSet<String>();
 	}
 
-	public Course(String code, String name, Set<Course> prerequisites) {
+	public Course(String code, String name, Set<String> prerequisites) {
 		this.code = code;
 		this.name = name;
 		this.prerequisites = prerequisites;
@@ -32,11 +32,11 @@ public class Course {
 		this.code = code;
 	}
 
-	public Set<Course> getRequisites() {
+	public Set<String> getRequisites() {
 		return prerequisites;
 	}
 
-	public void setRequisites(Set<Course> prerequisites) {
+	public void setRequisites(Set<String> prerequisites) {
 		this.prerequisites = prerequisites;
 	}
 
