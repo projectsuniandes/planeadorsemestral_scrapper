@@ -31,6 +31,8 @@ public class UniandesFile {
             for (Course course : courses) {
                 if (pageName.equals(PREREQUISITES))
                     writeCoursePre(course);
+                else if (pageName.equals(COREQUISITES))
+                    writeCourseCo(course);
                 else if (pageName.equals(ALL_COURSES))
                     writeCourse(course);
             }
@@ -75,6 +77,14 @@ public class UniandesFile {
         courseRecord.add(course.getCode());
         courseRecord.add(course.getName());
         courseRecord.add(course.getRequisites().toString());
+        csvFilePrinter.printRecord(courseRecord);
+    }
+    
+    private void writeCourseCo(Course course) throws IOException {
+        List<String> courseRecord = new ArrayList<>();
+        courseRecord.add(course.getCode());
+        courseRecord.add(course.getName());
+        courseRecord.add(course.getCorequisites().toString());
         csvFilePrinter.printRecord(courseRecord);
     }
 

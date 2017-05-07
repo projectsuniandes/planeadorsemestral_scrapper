@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import file.UniandesFile;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.Stack;
 import object.Course;
 import org.jsoup.Jsoup;
@@ -40,6 +41,7 @@ public class Prerequisites {
 
     private static void createFile() {
         new UniandesFile(UniandesFile.PREREQUISITES, coursesList);
+        new UniandesFile(UniandesFile.COREQUISITES, coursesList);
     }
 
     private static void subPage(String url) throws IOException {
@@ -80,27 +82,103 @@ public class Prerequisites {
         Set<String> corequisitesList = new HashSet<>();
         
         System.out.println("course: " + course.getName());       
-        //String requisitesString = removeParenthesis(requisites.text());
-        String requisitesString = "GEOC 1022 Y ( (QUIM 1101 Y QUIM 1102) O QUIM 1103) Y QUIM 1103* Y FISI 1028";
-        System.out.println("requisites: " + requisitesString);
+        String requisitesString = requisites.text();
+        //String requisitesString = "GEOC 1022 Y ( (QUIM 1101 Y QUIM 1102) O QUIM 1103) Y QUIM 1103* Y ( (QUIM 1101 Y QUIM 1102) O QUIM 1103) Y FISI 1028";
+        //System.out.println("requisites: " + requisitesString);
         
-        ArrayList outers = new ArrayList();
-        
-        ArrayList newOuters = getOuterYs(requisitesString, outers);
-        ArrayList otherOuters = new ArrayList();
-        
-        String part = ""; String prereq = ""; String coreq = "";
-        int i;
-        for (i=0; i<newOuters.size(); i++){
-            part = (String) newOuters.get(i);
-            part = removeParenthesis(part);
-            if (areThereYs(part)){
-                otherOuters = getOuterYs(part, otherOuters);
+        try{
+            ArrayList outers = new ArrayList();
+            
+            ArrayList newOuters = getOuterYs(requisitesString, outers);
+            ArrayList otherOuters = new ArrayList();
+
+            String part = ""; String prereq = ""; String coreq = "";
+            int i;
+            for (i=0; i<newOuters.size(); i++){
+                part = (String) newOuters.get(i);
+                part = removeParenthesis(part);
+                if (areThereYs(part)){
+                    otherOuters = getOuterYs(part, otherOuters);
+                }
+                else {
+                    prereq = getFirstO(part);
+                    if (isCoreq(prereq)){
+                        coreq = prereq.split("\\*")[0];
+                        corequisitesList.add(coreq);
+                        System.out.println("coreq: " + coreq);
+                    }
+                    else {
+                        requisitesList.add(prereq);
+                        System.out.println("req: " + prereq);
+                    }
+                }
+            }
+
+            //ArrayList inners = new ArrayList();
+            String innerYs[];
+            int j;
+            for (i=0; i<otherOuters.size(); i++){
+                part = (String) otherOuters.get(i);
+                part = removeParenthesis(part);
+                part = getFirstO(part);
+                part = removeParenthesis(part);
+                //inners = getOuterYs(part, inners);
+
+                if (areThereYs(part)){
+                    innerYs = part.split(" Y ");
+                    for (j=0; j<innerYs.length; j++){
+                        prereq = getFirstO(innerYs[j]);
+                        if (isCoreq(prereq)){
+                            coreq = prereq.split("\\*")[0];
+                            corequisitesList.add(coreq);
+                            System.out.println("coreq: " + coreq);
+                        }
+                        else {
+                            requisitesList.add(prereq);
+                            System.out.println("req: " + prereq);
+                        }
+                    }
+                }
+                else {
+                    //prereq = getFirstO(part);
+                    prereq = part;
+                    if (isCoreq(prereq)){
+                        coreq = prereq.split("\\*")[0];
+                        corequisitesList.add(coreq);
+                        System.out.println("coreq: " + coreq);
+                    }
+                    else {
+                        requisitesList.add(prereq);
+                        System.out.println("req: " + prereq);
+                    }
+                }
+            }
+        } catch (EmptyStackException e){
+            String firstO = getFirstO(requisitesString);
+            firstO = removeParenthesis(firstO);
+            String prereq, coreq; 
+            
+            if (areThereYs(firstO)){
+                String innerYs[] = firstO.split(" Y ");
+                int j;
+                
+                for (j=0; j<innerYs.length; j++){
+                    prereq = innerYs[j];
+                    if (isCoreq(prereq)){
+                        coreq = prereq.split("\\*")[0];
+                        corequisitesList.add(coreq);
+                        System.out.println("coreq: " + coreq);
+                    }
+                    else {
+                        requisitesList.add(prereq);
+                        System.out.println("req: " + prereq);
+                    }
+                }
             }
             else {
-                prereq = getFirstO(part);
+                prereq = firstO;
                 if (isCoreq(prereq)){
-                    coreq = prereq.split("*")[0];
+                    coreq = prereq.split("\\*")[0];
                     corequisitesList.add(coreq);
                     System.out.println("coreq: " + coreq);
                 }
@@ -109,22 +187,7 @@ public class Prerequisites {
                     System.out.println("req: " + prereq);
                 }
             }
-        }
-        
-        for (i=0; i<otherOuters.size(); i++){
-            part = (String) otherOuters.get(i);
-            part = removeParenthesis(part);
-            prereq = getFirstO(part);
-            if (isCoreq(prereq)){
-                coreq = prereq.split("*")[0];
-                corequisitesList.add(coreq);
-                System.out.println("coreq: " + coreq);
-            }
-            else {
-                requisitesList.add(prereq);
-                System.out.println("req: " + prereq);
-            }
-        }
+        }      
         
         course.setRequisites(requisitesList);
         course.setCorequisites(corequisitesList);
@@ -184,8 +247,6 @@ public class Prerequisites {
         
         outers.add(newString);
         
-        System.out.println("arraylist: " + outers.toString());
-        
         return outers;
     }
     
@@ -199,10 +260,10 @@ public class Prerequisites {
             for (i=1; i<letters.length-1; i++){
                 newS += letters[i];
             }
-            return newS;
+            return newS.trim();
         }
         else{
-            return s;
+            return s.trim();
         }
     }
 
