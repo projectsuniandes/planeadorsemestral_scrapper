@@ -10,6 +10,7 @@ public class Course {
     private double credits;
 
     private Set<String> prerequisites;
+    private Set<String> corequisites;
 
     public Course() {
 
@@ -35,6 +36,14 @@ public class Course {
 
     public void setRequisites(Set<String> prerequisites) {
         this.prerequisites = prerequisites;
+    }
+    
+    public Set<String> getCorequisites() {
+        return corequisites;
+    }
+    
+    public void setCorequisites(Set<String> corequisites) {
+        this.corequisites = corequisites;
     }
 
     public void setName(String name) {

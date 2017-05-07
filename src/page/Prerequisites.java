@@ -7,6 +7,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import file.UniandesFile;
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Stack;
 import object.Course;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -60,9 +63,6 @@ public class Prerequisites {
                 Elements requisites = courseCell.get(2).select("font");
                 Elements requisites2 = requisites.select("span");
                 
-                System.out.println("requisites: " + requisites.toString());
-                System.out.println("requisites2: " + requisites2.toString());
-                
                 if (requisites2.isEmpty()) {
                     course = setRequisites(requisites, course);
                 } else {
@@ -75,14 +75,138 @@ public class Prerequisites {
     }
 
     private static Course setRequisites(Elements requisites, Course course) {
-        Pattern pattern = java.util.regex.Pattern.compile("(\\w+[ ]*\\d+)");
-        Matcher matcher = pattern.matcher(requisites.text());
+        
         Set<String> requisitesList = new HashSet<>();
-        while (matcher.find()) {
-            String courseCode = matcher.group(1);
-            requisitesList.add(courseCode);
+        Set<String> corequisitesList = new HashSet<>();
+        
+        System.out.println("course: " + course.getName());       
+        //String requisitesString = removeParenthesis(requisites.text());
+        String requisitesString = "GEOC 1022 Y ( (QUIM 1101 Y QUIM 1102) O QUIM 1103) Y QUIM 1103* Y FISI 1028";
+        System.out.println("requisites: " + requisitesString);
+        
+        ArrayList outers = new ArrayList();
+        
+        ArrayList newOuters = getOuterYs(requisitesString, outers);
+        ArrayList otherOuters = new ArrayList();
+        
+        String part = ""; String prereq = ""; String coreq = "";
+        int i;
+        for (i=0; i<newOuters.size(); i++){
+            part = (String) newOuters.get(i);
+            part = removeParenthesis(part);
+            if (areThereYs(part)){
+                otherOuters = getOuterYs(part, otherOuters);
+            }
+            else {
+                prereq = getFirstO(part);
+                if (isCoreq(prereq)){
+                    coreq = prereq.split("*")[0];
+                    corequisitesList.add(coreq);
+                    System.out.println("coreq: " + coreq);
+                }
+                else {
+                    requisitesList.add(prereq);
+                    System.out.println("req: " + prereq);
+                }
+            }
         }
+        
+        for (i=0; i<otherOuters.size(); i++){
+            part = (String) otherOuters.get(i);
+            part = removeParenthesis(part);
+            prereq = getFirstO(part);
+            if (isCoreq(prereq)){
+                coreq = prereq.split("*")[0];
+                corequisitesList.add(coreq);
+                System.out.println("coreq: " + coreq);
+            }
+            else {
+                requisitesList.add(prereq);
+                System.out.println("req: " + prereq);
+            }
+        }
+        
         course.setRequisites(requisitesList);
+        course.setCorequisites(corequisitesList);
         return course;
+    }
+    
+    private static boolean areThereYs(String p) {
+        if (p.split("Y").length > 1){
+            return true;
+        }
+        return false;
+    }
+    
+    private static boolean isCoreq(String p) {
+        CharSequence sq = "*";
+        if (p.contains(sq)){
+            return true;
+        }
+        return false;
+    }
+    
+    private static ArrayList getOuterYs(String p, ArrayList outers) {
+        
+        int numParenthesis = 0;
+        int newPosY = 0;
+        
+        Stack ys = new Stack();
+        
+        int i; int cutter = 0;
+        String l = "";
+        String newString = p;
+        String letters[] = p.split(""); 
+        String part1; String part2;
+        
+        for (i=0; i<letters.length; i++){
+            l = letters[i];
+            if (l.equals("(")){
+                ys.push(1);
+                numParenthesis += 1;
+            }
+            else if (l.equals(")")){
+                ys.pop();
+            }
+            else if (ys.isEmpty() && (l.equals("Y")) && (letters[i-1].equals(" ")) && (letters[i+1].equals(" "))){
+                
+                newPosY = i-cutter;
+                                
+                part1 = newString.substring(0, newPosY-1);
+                part2 = newString.substring(newPosY+2);
+
+                outers.add( part1 );
+                newString = part2;
+                
+                cutter += part1.length() + 3;
+            }           
+        }
+        
+        outers.add(newString);
+        
+        System.out.println("arraylist: " + outers.toString());
+        
+        return outers;
+    }
+    
+    private static String removeParenthesis(String s){
+        
+        String letters[] = s.split("");
+        
+        if (letters[0].equals("(") && letters[letters.length-1].equals(")")){
+            String newS = "";
+            int i;
+            for (i=1; i<letters.length-1; i++){
+                newS += letters[i];
+            }
+            return newS;
+        }
+        else{
+            return s;
+        }
+    }
+
+    private static String getFirstO(String s) {
+        return s.split(" O ")[0];
     }
 }
