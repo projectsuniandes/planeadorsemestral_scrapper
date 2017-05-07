@@ -15,6 +15,7 @@ public class UniandesFile {
     //Delimiter used in CSV file
     private static final String NEW_LINE_SEPARATOR = "\n";
     public static final String PREREQUISITES = "Prerequisites";
+    public static final String COREQUISITES = "Corequisites";
     public static final String ALL_COURSES = "Uniandes";
 
 

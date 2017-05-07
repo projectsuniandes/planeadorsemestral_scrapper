@@ -13,7 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class Prerequisites {
+public class Corequisites {
 
     private static Set<Course> coursesList = new HashSet<>();
 
@@ -36,7 +36,7 @@ public class Prerequisites {
     }
 
     private static void createFile() {
-        new UniandesFile(UniandesFile.PREREQUISITES, coursesList);
+        new UniandesFile(UniandesFile.COREQUISITES, coursesList);
     }
 
     private static void subPage(String url) throws IOException {
@@ -59,10 +59,6 @@ public class Prerequisites {
                 course.setName(courseCell.get(1).select("font").text());
                 Elements requisites = courseCell.get(2).select("font");
                 Elements requisites2 = requisites.select("span");
-                
-                System.out.println("requisites: " + requisites.toString());
-                System.out.println("requisites2: " + requisites2.toString());
-                
                 if (requisites2.isEmpty()) {
                     course = setRequisites(requisites, course);
                 } else {
